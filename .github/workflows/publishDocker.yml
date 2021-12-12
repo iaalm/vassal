@@ -1,0 +1,37 @@
+name: Docker
+
+on:
+  release:
+    types: # This configuration does not affect the page_build event above
+      - created
+
+jobs:
+  docker:
+    name: Docker
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Set branch
+        run: git checkout -b ${GITHUB_HEAD_REF}
+
+      - name: Store version
+        id: version
+        run: echo "::set-output name=VERSION::$(make version-print)"
+
+      - name: Download Linux package
+        uses: actions/download-artifact@v2
+        with:
+          name: VASSAL-${{ steps.version.outputs.VERSION }}-linux.tar.bz2
+          path: tmp/VASSAL-${{ steps.version.outputs.VERSION }}-linux.tar.bz2
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: false
+          file: docker/Dockerfile
+          build-args: VERSION=${{ steps.version.outputs.VERSION }}
+          tags: iaalm/vassal:latest,iaalm/vassal:${{ steps.version.outputs.VERSION }}
