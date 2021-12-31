@@ -127,6 +127,10 @@ public class GameState implements CommandEncoder {
     loadingInBackground = b;
   }
 
+  void setLastSaveFile(File f) {
+    lastSaveFile = f;
+  }
+
   //public GameState() {}
 
   /**
@@ -658,8 +662,6 @@ public class GameState implements CommandEncoder {
           loadGameInBackground(f);
         }
       }
-
-      lastSaveFile = f;
     }
     catch (IOException e) {
       ReadErrorDialog.error(e, f);
@@ -762,6 +764,18 @@ public class GameState implements CommandEncoder {
     final FileChooser fc = GameModule.getGameModule().getFileChooser();
     fc.selectDotSavFile();
     fc.addChoosableFileFilter(new LogAndSaveFileFilter());
+
+    if (lastSaveFile != null) {
+      // if there is a lastSaveFile, use it as the default
+      fc.setSelectedFile(lastSaveFile);
+    }
+    else {
+      // otherwise, set the directory by the previous file
+      final File f = fc.getSelectedFile();
+      if (f != null && !f.isDirectory()) {
+        fc.setCurrentDirectory(f.getParentFile());
+      }
+    }
 
     if (fc.showSaveDialog() != FileChooser.APPROVE_OPTION) return null;
 
@@ -1046,7 +1060,12 @@ public class GameState implements CommandEncoder {
           else {
             msg = Resources.getString("GameState.loaded", shortName); //$NON-NLS-1$
           }
+
           g.setGameFile(shortName, GameModule.GameFileMode.LOADED_GAME);
+
+          if (((BasicLogger) g.getLogger()).isReplaying()) {
+            lastSaveFile = null;
+          }
         }
         else {
           msg = Resources.getString("GameState.cancel_load", shortName);
@@ -1140,6 +1159,10 @@ public class GameState implements CommandEncoder {
                 msg = Resources.getString("GameState.loaded", shortName); //$NON-NLS-1$
               }
               g.setGameFile(shortName, GameModule.GameFileMode.LOADED_GAME);
+
+              if (((BasicLogger) g.getLogger()).isReplaying() || fromPredefinedSetup) {
+                lastSaveFile = null;
+              }
             }
             else {
               msg = Resources.getString("GameState.invalid_savefile", shortName);  //$NON-NLS-1$

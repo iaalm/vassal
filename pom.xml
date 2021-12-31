@@ -4,7 +4,7 @@
 
     <groupId>org.vassalengine</groupId>
     <artifactId>vassal-parent</artifactId>
-    <version>3.6.3-SNAPSHOT</version>
+    <version>3.6.3</version>
     <packaging>pom</packaging>
 
     <name>Vassal Engine</name>
@@ -88,7 +88,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.9.1</version>
+                    <version>3.10.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-deploy-plugin</artifactId>
@@ -101,7 +101,7 @@
                         <dependency>
                             <groupId>com.puppycrawl.tools</groupId>
                             <artifactId>checkstyle</artifactId>
-                            <version>9.2</version>
+                            <version>9.2.1</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -124,7 +124,7 @@
                 <plugin>
                     <groupId>com.github.spotbugs</groupId>
                     <artifactId>spotbugs-maven-plugin</artifactId>
-                    <version>4.5.0.0</version>
+                    <version>4.5.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.asciidoctor</groupId>

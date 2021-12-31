@@ -1,9 +1,30 @@
 3.6.3 - ???
 
+* 11008: Prevent URLConnection cache from holding edited modules open on
+    Windows
+* 11007: Fix ArrayIndexOutOfBoundsException in StringEnumConfigurer
+* 11003: Fixed bad tile message; added plea for help with
+    TileNotFoundExceptions
+* 10997: Editor: Don't close window when moving Map or other components
+    relative to Map
+* 10992: Fix NPE in SpecialDiceButton.getAttributeValueString() after deleting
+    tooltip
+* 10985: Reset save dialog filename after close of game
+* 10983: Fix bad Inventory.Counter.equals()
+* 10981: Reinstate AbstractBuildable.getComponents()
+* 10979: Prevent Save Game from clobbering log being replayed
+* 10970: Fix problem where rotated pieces did not move-fixed-distance in
+    correct direction
+* 10969: Fix Refresh of Pieces in Decks, remove old pieces completely
+* 10964: Fix Deal-to-Side Mask bug - Finish evaluating expression properly
+* 10961: Use heuristic value for initial tiler heap; use 3/4 physical RAM as
+    max heap
+* 10954: Fix stack overflow infinite loop if invalid property name put in blank
+* 10947: Collect diagnostic information for an SSLHandshakeException
 * 10942: Fix NPE in SendToLocation
 * 10940: Fix NPE in TurnLevel
 * 10934: Repaint the background in the SetupStack editor
-* 10931: Fix NPE in menu text
+* 10931: Fix NPE in KeyCommand.makeMenuText()
 
 3.6.2 - 9 December 2021
 
