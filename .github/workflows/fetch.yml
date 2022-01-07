@@ -1,0 +1,26 @@
+name: Fetch
+
+on:
+  workflow_dispatch:
+    inputs: {}
+  schedule:
+    - cron:  '0 0 * * *'
+
+jobs:
+  fetch:
+    name: Fetch & merge upstream
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Merge
+        id: merge
+        run:
+          tag=$(curl https://api.github.com/repos/vassalengine/vassal/releases/latest | jq -r .tag_name) ;
+          git remote add upstream https://github.com/vassalengine/vassal.git ;
+          git fetch upstream refs/tags/$tag ;
+          git merge FETCH_HEAD ;
+          git push
