@@ -15,11 +15,14 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          token: ${{ secrets.GIT_TOKEN }}
 
       - name: Merge
         id: merge
         run:
           tag=$(curl https://api.github.com/repos/vassalengine/vassal/releases/latest | jq -r .tag_name) ;
+          git config --global user.email "iaalmsimon@gmail.com" ;
+          git config --global user.name "iaalm" ;
           git remote add upstream https://github.com/vassalengine/vassal.git ;
           git fetch upstream refs/tags/$tag ;
           git merge FETCH_HEAD ;
