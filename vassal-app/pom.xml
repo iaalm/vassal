@@ -5,11 +5,11 @@
     <parent>
         <groupId>org.vassalengine</groupId>
         <artifactId>vassal-parent</artifactId>
-        <version>3.6.3</version>
+        <version>3.6.4</version>
     </parent>
 
     <artifactId>vassal-app</artifactId>
-    <version>3.6.3</version>
+    <version>3.6.4</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -111,7 +111,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.32</version>
+            <version>1.7.33</version>
         </dependency>
         <dependency>
             <groupId>org.swinglabs.swingx</groupId>

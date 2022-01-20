@@ -19,6 +19,7 @@
 package VASSAL.launch;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -28,6 +29,8 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -37,11 +40,20 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.SwingWorker;
 
+import VASSAL.build.AbstractConfigurable;
+import VASSAL.tools.lang.Pair;
+import org.apache.commons.lang3.SystemUtils;
+
+import VASSAL.build.GameModule;
+import VASSAL.build.module.Documentation;
 import VASSAL.build.module.GameState;
+import VASSAL.build.module.documentation.HelpWindow;
 import VASSAL.command.AlertCommand;
 import VASSAL.command.Command;
 import VASSAL.configure.ConfigureTree;
+import VASSAL.configure.ListKeyCommandsDialog;
 import VASSAL.configure.RefreshPredefinedSetupsDialog;
 import VASSAL.configure.RemoveUnusedImagesDialog;
 import VASSAL.configure.SaveAction;
@@ -49,11 +61,6 @@ import VASSAL.configure.SaveAsAction;
 import VASSAL.configure.ShowHelpAction;
 import VASSAL.configure.ValidationReport;
 import VASSAL.configure.ValidationReportDialog;
-import org.apache.commons.lang3.SystemUtils;
-
-import VASSAL.build.GameModule;
-import VASSAL.build.module.Documentation;
-import VASSAL.build.module.documentation.HelpWindow;
 import VASSAL.i18n.Resources;
 import VASSAL.tools.ApplicationIcons;
 import VASSAL.tools.ErrorDialog;
@@ -88,6 +95,8 @@ public abstract class EditorWindow extends JFrame {
   protected final JToolBar toolBar = new JToolBar();
 
   protected final JScrollPane scrollPane;
+
+  private ListKeyCommandsDialog listKeyCommands = null;
 
   protected EditorWindow() {
     updateWindowTitle();
@@ -155,6 +164,7 @@ public abstract class EditorWindow extends JFrame {
 
     toolsMenu.add(mm.addKey("Editor.ModuleEditor.refresh_predefined"));
     toolsMenu.add(mm.addKey("Editor.UnusedImages.remove_unused_images"));
+    toolsMenu.add(mm.addKey("Editor.ListKeyCommands.list_key_commands"));
 
     if (SystemUtils.IS_OS_MAC) {
       mm.addToSection("Editor.MenuBar", editMenu);  //NON-NLS
@@ -239,6 +249,39 @@ public abstract class EditorWindow extends JFrame {
       @Override
       public void actionPerformed(ActionEvent e) {
         new RemoveUnusedImagesDialog(EditorWindow.this).setVisible(true);
+      }
+    });
+
+    mm.addAction("Editor.ListKeyCommands.list_key_commands", new AbstractAction("List Key Commands") {  //NON-NLS
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        new SwingWorker<List<Pair<String[], AbstractConfigurable>>, Void>() {
+          @Override
+          public List<Pair<String[], AbstractConfigurable>> doInBackground() {
+            return ListKeyCommandsDialog.findAllKeyCommands();
+          }
+
+          @Override
+          protected void done() {
+            try {
+              setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+              if (listKeyCommands == null) {
+                listKeyCommands = new ListKeyCommandsDialog(EditorWindow.this, get());
+                listKeyCommands.setVisible(true);
+              }
+              else {
+                listKeyCommands.toFront();
+              }
+            }
+            catch (InterruptedException | ExecutionException e) {
+              ErrorDialog.bug(e);
+            }
+          }
+        }.execute();
       }
     });
 
@@ -359,6 +402,19 @@ public abstract class EditorWindow extends JFrame {
     add(scrollPane, BorderLayout.CENTER);
     pack();
   }
+
+  public ConfigureTree getTree() {
+    return tree;
+  }
+
+  public ListKeyCommandsDialog getListKeyCommands() {
+    return listKeyCommands;
+  }
+
+  public void clearListKeyCommands() {
+    listKeyCommands = null;
+  }
+
 
   /**
    * @param name Filename to check

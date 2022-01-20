@@ -5,11 +5,11 @@
     <parent>
         <groupId>org.vassalengine</groupId>
         <artifactId>vassal-parent</artifactId>
-        <version>3.6.3</version>
+        <version>3.6.4</version>
     </parent>
 
     <artifactId>vassal-doc</artifactId>
-    <version>3.6.3</version>
+    <version>3.6.4</version>
 
     <properties>
         <main.basedir>${project.basedir}${file.separator}..</main.basedir>
@@ -24,7 +24,7 @@
                     <dependency>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctorj-pdf</artifactId>
-                        <version>1.6.0</version>
+                        <version>1.6.2</version>
                     </dependency>
                 </dependencies>
                 <executions>

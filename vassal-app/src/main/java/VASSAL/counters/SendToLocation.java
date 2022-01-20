@@ -48,6 +48,7 @@ import VASSAL.i18n.TranslatablePiece;
 import VASSAL.script.expression.AuditTrail;
 import VASSAL.script.expression.Auditable;
 import VASSAL.script.expression.AuditableException;
+import VASSAL.script.expression.FormattedStringExpression;
 import VASSAL.tools.ErrorDialog;
 import VASSAL.tools.FormattedString;
 import VASSAL.tools.NamedKeyStroke;
@@ -471,7 +472,11 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
   private Point getSendLocation() {
     final GamePiece outer = Decorator.getOutermost(this);
 
-    final Destination dest = getSendLocation(outer, this, destination, mapId, boardName, zone, region, gridLocation, x, y, propertyFilter, getMap(), getPosition());
+    // Do pre-evaluation of $...$ expressions for source/target matching
+    final FormattedStringExpression props = new FormattedStringExpression(propertyFilter.getExpression());
+    final PropertyExpression pf = new PropertyExpression(props.tryEvaluate(outer, this, "Editor.SendToLocation.getSendLocation")); //NON-NLS
+
+    final Destination dest = getSendLocation(outer, this, destination, mapId, boardName, zone, region, gridLocation, x, y, pf, getMap(), getPosition());
     map = dest.map;
 
     // Offset destination by Advanced Options offsets
@@ -538,6 +543,12 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
         }
         c = c.append(map.placeOrMerge(outer, dest));
 
+        // The map field might change or even become null through the apply-key processes below, so we schedule our repaints now based on our current information.
+        if (oldMap != null && oldMap != map) {
+          oldMap.repaint();
+        }
+        map.repaint();
+
         // If a cargo piece has been "sent", find it a new Mat if needed.
         c = MatCargo.findNewMat(c, outer);
 
@@ -549,11 +560,6 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
         if (parent != null) {
           c = c.append(parent.pieceRemoved(outer));
         }
-
-        if (oldMap != null && oldMap != map) {
-          oldMap.repaint();
-        }
-        map.repaint();
       }
     }
     else {
@@ -719,6 +725,11 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
   @Override
   public String getBaseDescription() {
     return Resources.getString("Editor.SendToLocation.trait_description");
+  }
+
+  @Override
+  public String getDescriptionField() {
+    return description;
   }
 
   @Override

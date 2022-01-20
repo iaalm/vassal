@@ -173,6 +173,7 @@ public class ToolbarMenu extends AbstractToolbarItem
       toolbar.addContainerListener(this);
       scheduleBuildMenu();
     }
+    GameModule.getGameModule().getGameState().addGameComponent(this);
   }
 
   @Override
@@ -193,6 +194,7 @@ public class ToolbarMenu extends AbstractToolbarItem
   public void removeFrom(Buildable parent) {
     toolbar.remove(getLaunchButton());
     toolbar.removeContainerListener(this);
+    GameModule.getGameModule().getGameState().removeGameComponent(this);
   }
 
   protected void buildMenu() {
@@ -284,23 +286,27 @@ public class ToolbarMenu extends AbstractToolbarItem
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
-    final JButton b = (JButton) evt.getSource();
-    final JMenuItem mi = buttonsToMenuMap.get(b);
-    if (mi != null) {
-      if (AbstractButton.TEXT_CHANGED_PROPERTY.equals(evt.getPropertyName())) {
-        scheduleBuildMenu();
-      }
-      else if ("enabled".equals(evt.getPropertyName())) { //$NON-NLS-1$
-        mi.setEnabled(b.isEnabled());
-      }
-      else if (AbstractButton.ICON_CHANGED_PROPERTY.equals(evt.getPropertyName())) {
-        mi.setIcon(b.getIcon());
+    super.propertyChange(evt);
+    if (evt.getSource() instanceof JButton) {
+      final JButton b = (JButton) evt.getSource();
+      final JMenuItem mi = buttonsToMenuMap.get(b);
+      if (mi != null) {
+        if (AbstractButton.TEXT_CHANGED_PROPERTY.equals(evt.getPropertyName())) {
+          scheduleBuildMenu();
+        }
+        else if ("enabled".equals(evt.getPropertyName())) { //$NON-NLS-1$
+          mi.setEnabled(b.isEnabled());
+        }
+        else if (AbstractButton.ICON_CHANGED_PROPERTY.equals(evt.getPropertyName())) {
+          mi.setIcon(b.getIcon());
+        }
       }
     }
   }
 
   @Override
   public void setup(boolean gameStarting) {
+    super.setup(gameStarting);
     // Prevent our Toolbar buttons from becoming visible on Game close/reopen
     scheduleBuildMenu();
   }

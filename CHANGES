@@ -1,4 +1,38 @@
-3.6.3 - ???
+3.6.4 - 17 January 2022
+
+* 11079: Main window & map accept Drag-and-Drop for loading saves and logs
+* 11076: Editor's search function (and List Key Commands) will now "find" the
+    keys for Undo & Step Forward
+* 11074: Support Send-to-Location source/target matching with $...$ expressions
+* 11073: Fix situation where Send-to-Location throws exceptions when it can't
+    find target counters
+* 11070: Documentation updates for DrawingMouseover / DrawingMouseover Index
+* 11069: Fix crash in Load Deck when an invalid deck file selected in file
+    picker
+* 11067: Fix NPE in SetupStack.isOwningBoardActive()
+* 11065: Improved error handling when a temp file can't be created
+* 11062: Fix problem on Windows where a click at edge made it slowly scroll
+    all the way in that direction
+* 11060: Fixes to various Toolbar Buttons that weren't respecting the
+    "disable-on-global-property" settings
+* 11059: Right Click menu added to Show Error Log window in Module Manager
+* 11056: Don't attempt to send to already-hung-up connection
+* 11054: Don't let old versions of PoG load and crash
+* 11053: Suppress Empty Deck Hotkeys when refreshing game
+* 11041: Inventory windows respond to hide-if-property-true
+* 11039: Display Loaded message instead of Cancelled when refreshing
+    Predefined Setups
+* 11038: Allow 'Use Same Boards' option on Private Map to be removed
+* 11032: List Key Commands tool for Editor
+* 11031: Turn Tracker List configure box missing labels
+* 11025: Guard against ClassCastException when MultiActionButtons change
+    property values
+* 11024: Communicating with tiler over socket fails for some users; use stdout
+    instead
+* 11020: Don't display lock option for P2P rooms, which aren't lockable
+* 11011: Fixed typo in DiceButton docs
+
+3.6.3 - 29 December 2021
 
 * 11008: Prevent URLConnection cache from holding edited modules open on
     Windows

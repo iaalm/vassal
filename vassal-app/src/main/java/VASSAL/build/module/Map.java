@@ -1888,6 +1888,10 @@ public class Map extends AbstractToolbarItem implements GameComponent, MouseList
    */
   @Override
   public void mouseReleased(MouseEvent e) {
+    if (scroller.isRunning()) {
+      scroller.stop();
+    }
+
     // don't write over Java's mouse event
     final Point p = e.getPoint();
     p.translate(theMap.getX(), theMap.getY());
@@ -2005,7 +2009,8 @@ public class Map extends AbstractToolbarItem implements GameComponent, MouseList
         MouseEvent.NOBUTTON
       );
       theMap.dispatchEvent(evt);
-      dtde.dropComplete(true);
+
+      GameModule.getGameModule().getGameState().dropFile(dtde);
     }
 
     if (scroller.isRunning()) scroller.stop();
@@ -2719,6 +2724,8 @@ public class Map extends AbstractToolbarItem implements GameComponent, MouseList
    */
   @Override
   public void setup(boolean show) {
+    super.setup(show);
+
     final GameModule g = GameModule.getGameModule();
 
     if (show) {
