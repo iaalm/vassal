@@ -60,32 +60,7 @@ import VASSAL.tools.ScrollPane;
 import VASSAL.tools.WriteErrorDialog;
 import VASSAL.tools.filechooser.FileChooser;
 import VASSAL.tools.swing.SwingUtils;
-
-import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.apache.commons.lang3.ArrayUtils;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -104,8 +79,31 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-
-import org.apache.commons.lang3.ArrayUtils;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Inventory extends AbstractToolbarItem
                        implements GameComponent,
@@ -210,6 +208,9 @@ public class Inventory extends AbstractToolbarItem
 
   protected JDialog frame;
 
+  public static final String ZOOM_ON = "zoomOn"; //NON-NLS
+  protected boolean zoomShow = false;
+
   protected int zoomLevel = 0;
 
   private JButton zoomPlusButton;
@@ -258,6 +259,12 @@ public class Inventory extends AbstractToolbarItem
     frame.add(initTree());
     frame.add(initButtons());
     frame.setSize(250, 350);
+
+    zoomMinusButton.setVisible(zoomShow && drawPieces);
+    zoomPlusButton.setVisible(zoomShow && drawPieces);
+
+    zoomPlusButton.repaint();
+    zoomMinusButton.repaint();
   }
 
   /**
@@ -330,11 +337,13 @@ public class Inventory extends AbstractToolbarItem
   }
 
   private double getCurrentZoom() {
-    if (zoomLevel == 1) {
-      return pieceZoom2;
-    }
-    else if (zoomLevel >= 2) {
-      return pieceZoom3;
+    if (zoomShow) {
+      if (zoomLevel == 1) {
+        return pieceZoom2;
+      }
+      else if (zoomLevel >= 2) {
+        return pieceZoom3;
+      }
     }
     return pieceZoom;
   }
@@ -352,13 +361,16 @@ public class Inventory extends AbstractToolbarItem
       @Override
       public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 
-        if (value instanceof CounterNode) {
-          final GamePiece piece = ((CounterNode) value).getCounter().getPiece();
-          if (piece != null) {
-            if (!isVisibleToMe(piece)) {
-              super.getTreeCellRendererComponent(tree, Resources.getString("Inventory.unknown_piece"), sel, expanded, false, row, hasFocus);
-              setIcon(null);
-              return this;
+        //BR// Depending on Global Options setting, maybe don't allow seeing stuff in private windows that current player doesn't have access to.
+        if (!GlobalOptions.getInstance().isInventoryVisibleToAll()) {
+          if (value instanceof CounterNode) {
+            final GamePiece piece = ((CounterNode) value).getCounter().getPiece();
+            if (piece != null) {
+              if (!isVisibleToMe(piece)) {
+                super.getTreeCellRendererComponent(tree, Resources.getString("Inventory.unknown_piece"), sel, expanded, false, row, hasFocus);
+                setIcon(null);
+                return this;
+              }
             }
           }
         }
@@ -478,8 +490,8 @@ public class Inventory extends AbstractToolbarItem
     // .substring(1).replaceAll(
   //      mapSeparator, System.getProperty("line.separator"));
 
-    // Writing out a text file for the user to do whatever with. Use the native encoding.
-    try (Writer bw = Files.newBufferedWriter(file.toPath(), Charset.defaultCharset());
+    // Writing out a text file for the user to do whatever with.
+    try (Writer bw = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8);
          PrintWriter p = new PrintWriter(bw)) {
       p.print(output);
 
@@ -524,8 +536,10 @@ public class Inventory extends AbstractToolbarItem
     else {
       refresh();
 
-      zoomPlusButton.setVisible(drawPieces);
-      zoomMinusButton.setVisible(drawPieces);
+      zoomPlusButton.setVisible(zoomShow && drawPieces);
+      zoomMinusButton.setVisible(zoomShow && drawPieces);
+      zoomPlusButton.repaint();
+      zoomMinusButton.repaint();
 
       frame.setVisible(true);
     }
@@ -612,7 +626,8 @@ public class Inventory extends AbstractToolbarItem
       Resources.getString("Editor.Inventory.forward_keystroke"), //$NON-NLS-1$
       Resources.getString("Editor.Inventory.rightclick_piece"), //$NON-NLS-1$
       Resources.getString("Editor.Inventory.draw_piece"), //$NON-NLS-1$
-      Resources.getString("Editor.Inventory.zoom"), //$NON-NLS-1$
+      Resources.getString("Editor.Inventory.zoom_on"),
+      Resources.getString("Editor.Inventory.zoom"),
       Resources.getString("Editor.Inventory.zoom_2"),
       Resources.getString("Editor.Inventory.zoom_3"),
       Resources.getString("Editor.Inventory.available"), //$NON-NLS-1$
@@ -633,6 +648,7 @@ public class Inventory extends AbstractToolbarItem
       Boolean.class,
       PieceFormatConfig.class,
       SortConfig.class,
+      Boolean.class,
       Boolean.class,
       Boolean.class,
       Boolean.class,
@@ -662,6 +678,7 @@ public class Inventory extends AbstractToolbarItem
       FORWARD_KEYSTROKE,
       SHOW_MENU,
       DRAW_PIECES,
+      ZOOM_ON,
       PIECE_ZOOM,
       ZOOM_2,
       ZOOM_3,
@@ -730,6 +747,12 @@ public class Inventory extends AbstractToolbarItem
     else if (FOLDERS_ONLY.equals(key)) {
       foldersOnly = getBooleanValue(o);
       cutAboveLeaves = foldersOnly ? 1 : 0;
+    }
+    else if (ZOOM_ON.equals(key)) {
+      if (o instanceof String) {
+        o = Boolean.valueOf((String) o);
+      }
+      zoomShow = (Boolean) o;
     }
     else if (PIECE_ZOOM.equals(key)) {
       if (o instanceof String) {
@@ -857,6 +880,9 @@ public class Inventory extends AbstractToolbarItem
     }
     else if (PIECE_ZOOM.equals(key)) {
       return String.valueOf(pieceZoom);
+    }
+    else if (ZOOM_ON.equals(key)) {
+      return String.valueOf(zoomShow);
     }
     else if (ZOOM_2.equals(key)) {
       return String.valueOf(pieceZoom2);
@@ -1032,6 +1058,12 @@ public class Inventory extends AbstractToolbarItem
     if (zoomPlusButton != null) {
       zoomPlusButton.setEnabled(zoomLevel < 2);
       zoomMinusButton.setEnabled(zoomLevel > 0);
+
+      zoomPlusButton.setVisible(zoomShow && drawPieces);
+      zoomMinusButton.setVisible(zoomShow && drawPieces);
+
+      zoomPlusButton.repaint();
+      zoomMinusButton.repaint();
     }
   }
 

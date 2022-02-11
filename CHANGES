@@ -1,3 +1,52 @@
+3.6.5 - 10 February 2022
+
+* 11218: Grid Editor incorrectly changes some grid settings on Cancel
+* 11216: Inventory has checkbox to enable zoom (defaults off)
+* 11209: Global Options settings for (a) Inventory Security, and (b)
+    Send-to-Location generating move trails. Inventory now defaults to "old
+    behavior" on seeing private windows, but can be turned to secure.
+* 11205: Improved Polygon Editor (cut/paste vertices, delete polygon) &
+    Improved Region Editor (drag-at-edge works again, move regions inside of
+    zone)
+* 11197: Better auto-description for Translatable Message trait and BasicPiece
+* 11196: Game Refresher should not refresh stacks not on maps
+* 11194: The errorlog console command is available at all times
+* 11186: Disable load and edit actions for null modules
+* 11179: Chart Windows display their names properly in their window titles
+* 11164: Upgrade bundled Java to 17.0.2+8
+* 11162: Turn Tracker does not display a spurious blank line if its report
+    format is left empty
+* 11160: Prevent At-Start Stacks from creating additional spurious pieces on
+    main map
+* 11156: Games incorrectly load normally during 'Load Continuation'
+* 11150: Use heuristic value for tiler max heap, retry with 50% more on failure
+* 11149: Capture tiling error messages Java incorrectly writes to stdout
+* 11139: Deal-to-Other key in Mask Trait now recognized in Search
+* 11135: Prompt to save/discard/cancel before loading the new game; fixed
+    Discord console drag-and-drop bug
+* 11127: Don't throw exception if there's a drive letter in a filename
+* 11124: Console supports up-arrow / down-arrow for command history
+* 11122: Console can show/set properties of selected pieces
+* 11121: Fix problem where undo wasn't allowed when starting a new game with
+    logging turned on
+* 11120: Permit hyphens and periods in GamePieceImage names
+* 11119: Fixed NPE in NamedHotKeyConfigurer.setValue()
+* 11117: Log files can be fast-forwarded and appended to
+* 11115: Fix ClassCastException due to Zone properties not accounting for
+    folders
+* 11109: LOS Range incorrect when thread is not snapped to hex centres
+* 11107: Warn if Decks or Stacks defined before [Map Boards]
+* 11106: Fix NPE when duplicating GamePieceImage
+* 11105: Added missing Editor.SendToLocation.getSendLocation translation key
+* 11098: Screenshot "typo" fix for Turn Tracker's global hotkey
+* 11096: Remove "duplicate this item" option from Game Piece Image
+* 11095: Deduce the existence of localized image directories which lack ZIP
+    entries
+* 11094: Exclude GamePieceLayout image names from unused image list
+* 11093: Image directories for i18n were not found in 3.6.4
+* 11089: Write text files in UTF-8, not the default encoding
+* 11081: Prevent GameRefresher from changing visual order of pieces
+
 3.6.4 - 17 January 2022
 
 * 11079: Main window & map accept Drag-and-Drop for loading saves and logs
