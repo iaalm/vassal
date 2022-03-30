@@ -260,6 +260,8 @@ public class GameModule extends AbstractConfigurable
   private String description = "";
   private String lastSavedConfiguration;
   private FileChooser fileChooser;
+  private FileChooser fileChooserEditorImage;
+  private FileChooser fileChooserEditorSound;
   private final MutablePropertiesContainer propsContainer = new MutablePropertiesContainer.Impl();
   private final TranslatableStringContainer transContainer = new TranslatableStringContainer.Impl();
 
@@ -673,7 +675,7 @@ public class GameModule extends AbstractConfigurable
      * know which preferences to read.
      */
     if (e != null) {
-      gameName = e.getAttribute(MODULE_NAME);
+      gameName = e.getAttribute(MODULE_NAME).strip();
       if (e.getAttribute(VASSAL_VERSION_CREATED).length() > 0) {
         vassalVersionCreated = e.getAttribute(VASSAL_VERSION_CREATED);
       }
@@ -881,11 +883,17 @@ public class GameModule extends AbstractConfigurable
       }
       else {
         gameName = (String) value;
+        if (gameName != null) {
+          gameName = gameName.strip();
+        }
       }
       setConfigureName((String) value);
     }
     else if (MODULE_VERSION.equals(name)) {
       moduleVersion = (String) value;
+      if (moduleVersion != null) {
+        moduleVersion = moduleVersion.strip();
+      }
     }
     else if (VASSAL_VERSION_CREATED.equals(name)) {
       vassalVersionCreated = (String) value;
@@ -1171,6 +1179,20 @@ public class GameModule extends AbstractConfigurable
   }
 
   /**
+   * @return extra information 1 for module
+   */
+  public String getModuleOther1() {
+    return moduleOther1;
+  }
+
+  /**
+   * @return extra information 2 for module
+   */
+  public String getModuleOther2() {
+    return moduleOther2;
+  }
+
+  /**
    * Currently used to listen for changes to player names
    * @param l propertyChangeListener to add
    */
@@ -1450,6 +1472,41 @@ public class GameModule extends AbstractConfigurable
 
     return fileChooser;
   }
+
+  /**
+   * @return a common FileChooser so that recent file locations
+   * can be remembered
+   */
+  public FileChooser getEditorImageChooser() {
+    if (fileChooserEditorImage == null) {
+      fileChooserEditorImage = FileChooser.createFileChooser(getPlayerWindow(),
+        getGameState().getEditorImageDirectoryPreference());
+    }
+    else {
+      fileChooserEditorImage.resetChoosableFileFilters();
+      fileChooserEditorImage.rescanCurrentDirectory();
+    }
+
+    return fileChooserEditorImage;
+  }
+
+  /**
+   * @return a common FileChooser so that recent file locations
+   * can be remembered
+   */
+  public FileChooser getEditorSoundChooser() {
+    if (fileChooserEditorSound == null) {
+      fileChooserEditorSound = FileChooser.createFileChooser(getPlayerWindow(),
+        getGameState().getEditorImageDirectoryPreference());
+    }
+    else {
+      fileChooserEditorSound.resetChoosableFileFilters();
+      fileChooserEditorSound.rescanCurrentDirectory();
+    }
+
+    return fileChooserEditorSound;
+  }
+
 
   /**
    * Provides access to the Game Module's toolbar.
@@ -2206,7 +2263,11 @@ public class GameModule extends AbstractConfigurable
    * @return a cumulative CRC from all of our files
    */
   public long getCrc() {
-    if (crc == null) {
+    return getCrc(false);
+  }
+
+  public long getCrc(boolean forceRegenerate) {
+    if (crc == null || forceRegenerate) {
       crc = buildCrc();
     }
     return crc;

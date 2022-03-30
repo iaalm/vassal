@@ -17,6 +17,43 @@
   ],
   "changes": [
     {
+      "in": "3.6.6",
+      "since": "3.6.5",
+      "new_features": [
+      ],
+      "bug_fixes": [
+        { "num": 11327, "desc": "Fix Action Button not working after refreshing pre-defined setups" },
+        { "num": 11325, "desc": "Implement the missing Play Sound trait 'Send sound to other players' functionality" },
+        { "num": 11315, "desc": "Show correct Turn Tracker tooltip" },
+        { "num": 11302, "desc": "Fixed link typo in GamePieceImageDefinitions page of Reference Manual" },
+        { "num": 11287, "desc": "Fix ConcurrentExecutionException in Game Refresher with Mats" },
+        { "num": 11278, "desc": "Scale tiled images to target size rather than by scale factor" },
+        { "num": 11254, "desc": "Tiler dialog doesn't cancel tiling when Cancel button is clicked" },
+        { "num": 11248, "desc": "Catch InvalidDnDOperation exceptions when inappropriate drag-and-drops attempted" },
+        { "num": 11227, "desc": "Fix NPE when copying vertices from a zone with no vertices" },
+        { "num": 11232, "desc": "Stop edit of table when TableInfo is closed" },
+        { "num": 11223, "desc": "Copy/Paste conversions fixed for Zone Properties to/from Global and Map Properties" },
+        { "num": 11188, "desc": "DoActionButton hotkeys were not found by search" }
+      ],
+      "other_improvements": [
+        { "num": 11303, "desc": "Preference to control drag-at-edge scroll rate; per module defaults for edge scrolling" },
+        { "num": 11297, "desc": "Don't copy out unused images on removal" },
+        { "num": 11296, "desc": "Don't block the EDT when clearing the tile cache" },
+        { "num": 11292, "desc": "Strip leading and trailing whitespace from module names and versions" },
+        { "num": 11286, "desc": "Improved Setup Stack descriptions in editor" },
+        { "num": 11279, "desc": "Module \"other\" strings displayed in About screen" },
+        { "num": 11276, "desc": "Place Marker (and Replace With Other) include name of added piece in summary" },
+        { "num": 11260, "desc": "Editor now remembers its most recent image-picking (and sound) directories separately from its memory of last save/load of games and logs" },
+        { "num": 11258, "desc": "New BasicName trait defaults to Prototype's name; Changing Prototype's name changes BasicName trait's, if identical; At-Start Stack with no name displays name of first contained piece or folder in editor" },
+        { "num": 11256, "desc": "Added a preference for the tiler max heap; tiler will retry up to that limit" },
+        { "num": 11255, "desc": "Updated downloads URL to the one for our download page" },
+        { "num": 11243, "desc": "Enable Sum and Count in GKC Report Expressions" },
+        { "num": 11233, "desc": "UI Cleanup: don't scroll-at-edge the map if a file or link is being dragged instead of a piece" },
+        { "num": 11229, "desc": "Allow 'Select All Regions' when defining them; right click to delete now works for single unselected region" },
+        { "num": 11071, "desc": "Improved version number checking" }
+      ]
+    },
+    {
       "in": "3.6.5",
       "since": "3.6.4",
       "new_features": [
@@ -61,39 +98,6 @@
         { "num": 11120, "desc": "Permit hyphens and periods in GamePieceImage names" },
         { "num": 11107, "desc": "Warn if Decks or Stacks defined before [Map Boards]" },
         { "num": 11098, "desc": "Screenshot \"typo\" fix for Turn Tracker's global hotkey" }
-      ]
-    },
-    {
-      "in": "3.6.4",
-      "since": "3.6.3",
-      "new_features": [
-        { "num": 11079, "desc": "Main window & map accept Drag-and-Drop for loading saves and logs" },
-        { "num": 11032, "desc": "List Key Commands tool for Editor" }
-      ],
-      "bug_fixes": [
-        { "num": 11073, "desc": "Fix situation where Send-to-Location throws exceptions when it can't find target counters" },
-        { "num": 11069, "desc": "Fix crash in Load Deck when an invalid deck file selected in file picker" },
-        { "num": 11067, "desc": "Fix NPE in SetupStack.isOwningBoardActive()" },
-        { "num": 11065, "desc": "Improved error handling when a temp file can't be created" },
-        { "num": 11062, "desc": "Fix problem on Windows where a click at edge made it slowly scroll all the way in that direction" },
-        { "num": 11060, "desc": "Fixes to various Toolbar Buttons that weren't respecting the \"disable-on-global-property\" settings" },
-        { "num": 11056, "desc": "Don't attempt to send to already-hung-up connection" },
-        { "num": 11053, "desc": "Suppress Empty Deck Hotkeys when refreshing game" },
-        { "num": 11041, "desc": "Inventory windows respond to hide-if-property-true" },
-        { "num": 11039, "desc": "Display Loaded message instead of Cancelled when refreshing Predefined Setups" },
-        { "num": 11038, "desc": "Allow 'Use Same Boards' option on Private Map to be removed" },
-        { "num": 11031, "desc": "Turn Tracker List configure box missing labels" },
-        { "num": 11025, "desc": "Guard against ClassCastException when MultiActionButtons change property values" },
-        { "num": 11024, "desc": "Communicating with tiler over socket fails for some users; use stdout instead" },
-        { "num": 11020, "desc": "Don't display lock option for P2P rooms, which aren't lockable" },
-        { "num": 11011, "desc": "Fixed typo in DiceButton docs" }
-      ],
-      "other_improvements": [
-        { "num": 11076, "desc": "Editor's search function (and List Key Commands) will now \"find\" the keys for Undo & Step Forward" },
-        { "num": 11074, "desc": "Support Send-to-Location source/target matching with $...$ expressions" },
-        { "num": 11070, "desc": "Documentation updates for DrawingMouseover / DrawingMouseover Index" },
-        { "num": 11059, "desc": "Right Click menu added to Show Error Log window in Module Manager" },
-        { "num": 11054, "desc": "Don't let old versions of PoG load and crash" }
       ]
     }
   ]

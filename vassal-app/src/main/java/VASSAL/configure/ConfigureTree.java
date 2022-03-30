@@ -57,8 +57,13 @@ import VASSAL.tools.NamedKeyStroke;
 import VASSAL.tools.ReflectionUtils;
 import VASSAL.tools.menu.MenuManager;
 import VASSAL.tools.swing.SwingUtils;
+
 import net.miginfocom.swing.MigLayout;
+
 import org.apache.commons.lang3.StringUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -100,6 +105,7 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.InvalidDnDOperationException;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -131,6 +137,8 @@ import java.util.stream.IntStream;
  */
 public class ConfigureTree extends JTree implements PropertyChangeListener, MouseListener, MouseMotionListener, TreeSelectionListener, TreeExpansionListener {
   private static final long serialVersionUID = 1L;
+
+  private static final Logger logger = LoggerFactory.getLogger(ConfigureTree.class);
 
   protected Map<Configurable, DefaultMutableTreeNode> nodes = new HashMap<>();
   protected DefaultMutableTreeNode copyData;
@@ -696,6 +704,13 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
     }
     else if (child.getClass() == CardSlot.class && isAllowedChildClass(parent, PieceSlot.class)) {
       return new PieceSlot((CardSlot) child);
+    }
+    // Handle the conversion between zone properties & global/map properties
+    else if (child.getClass() == ZoneProperty.class && isAllowedChildClass(parent, GlobalProperty.class)) {
+      return new GlobalProperty((GlobalProperty) child);
+    }
+    else if (child.getClass() == GlobalProperty.class && isAllowedChildClass(parent, ZoneProperty.class)) {
+      return new ZoneProperty((GlobalProperty) child);
     }
     // Handle conversion between different types of GKCs. Note startup GKC's cannot be created this way.
     // Any non-Startup GKC pasted at the module level will be transformed to a GlobalKeyCommand
@@ -2449,7 +2464,7 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
         flavors[0] = nodesFlavor;
       }
       catch (ClassNotFoundException e) {
-        System.out.println("Class Not Found: " + e.getMessage()); //NON-NLS
+        logger.error("Class Not Found: " + e.getMessage()); //NON-NLS
       }
     }
 
@@ -2556,10 +2571,13 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
         nodes = (DefaultMutableTreeNode[])t.getTransferData(nodesFlavor);
       }
       catch (UnsupportedFlavorException ufe) {
-        System.out.println("Unsupported Flavor: " + ufe.getMessage()); //NON-NLS
+        logger.error("Unsupported Flavor: " + ufe.getMessage()); //NON-NLS
       }
       catch (java.io.IOException ioe) {
-        System.out.println("I/O error: " + ioe.getMessage()); //NON-NLS
+        logger.error("I/O error: " + ioe.getMessage()); //NON-NLS
+      }
+      catch (InvalidDnDOperationException id) {
+        logger.error("Invalid DND Operation: " + id.getMessage()); //NON-NLS
       }
 
       if (nodes == null) {

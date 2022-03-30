@@ -67,6 +67,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.InvalidDnDOperationException;
 import java.awt.event.ActionEvent;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -115,6 +116,8 @@ public class GameState implements CommandEncoder {
   protected String lastSave;
   protected File lastSaveFile = null;
   protected DirectoryConfigurer savedGameDirectoryPreference;
+  protected DirectoryConfigurer editorImageDirectoryPreference;
+  protected DirectoryConfigurer editorSoundDirectoryPreference;
   protected String loadComments;
   protected boolean loadingInBackground = false;
   private boolean fastForwarding = false;
@@ -580,34 +583,61 @@ public class GameState implements CommandEncoder {
     // Check it belongs to this module and matches the version if is a
     // post 3.0 save file
     final SaveMetaData saveData = (SaveMetaData) metaData;
+
     final String moduleName = GameModule.getGameModule().getGameName();
     final String moduleVersion = GameModule.getGameModule().getGameVersion();
+    final String vassalVersion = VersionUtils.truncateToIncrementalVersion(Info.getVersion());
+
     final String saveModuleName = saveData.getModuleName();
     String saveModuleVersion = "?";
+    String saveVassalVersion = "?";
+    int problemCount = 0;
+
+    // Was the Module Data that created the save stored in the save? (Vassal 3.0+)
     if (saveData.getModuleData() != null) {
       saveModuleVersion = saveData.getModuleVersion();
-      String message = null;
+      saveVassalVersion = VersionUtils.truncateToIncrementalVersion(saveData.getVassalVersion());
+      final StringBuilder message = new StringBuilder();
+      message.append(Resources.getString("GameState.load_mismatch_header",  file.getName())).append("\n\n");
 
       if (!saveModuleName.equals(moduleName)) {
-        message = Resources.getString(
-          "GameState.load_module_mismatch",
-          file.getName(), saveModuleName, moduleName
-        );
-      }
-      else if (!saveModuleVersion.equals(moduleVersion)) {
-        message = Resources.getString(
-          "GameState.load_version_mismatch",
-          file.getName(), saveModuleVersion, moduleVersion
-        );
+        message.append(Resources.getString("GameState.load_module_mismatch", saveModuleName, moduleName)).append('\n');
+        problemCount++;
       }
 
-      if (message != null) {
-        return JOptionPane.showConfirmDialog(
+      if (!saveModuleVersion.equals(moduleVersion)) {
+        message.append(Resources.getString("GameState.load_version_mismatch", saveModuleVersion, moduleVersion)).append('\n');
+        problemCount++;
+      }
+
+      if (!saveVassalVersion.equals(vassalVersion)) {
+        message.append(Resources.getString("GameState.load_vassal_mismatch", saveVassalVersion, vassalVersion)).append('\n');
+        problemCount++;
+      }
+
+      message.append('\n').append(Resources.getString("GameState.load_mismatch_trailer")).append('\n');
+
+      if (problemCount > 0) {
+        if (JOptionPane.showConfirmDialog(
           null,
-          message,
+          message.toString(),
           Resources.getString("GameState.load_mismatch"),
           JOptionPane.YES_NO_OPTION,
-          JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION;
+          JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+          return false;
+        }
+
+        if (!saveModuleName.equals(moduleName)) {
+          log.info("*** User explicitly cleared mismatch of module name - " + saveModuleName + " file loaded into => " + moduleName); //NON-NLS
+        }
+
+        if (!saveModuleVersion.equals(moduleVersion)) {
+          log.info("*** User explicitly cleared mismatch of module version - " + saveModuleVersion + " file loaded into => " + moduleVersion); //NON-NLS
+        }
+
+        if (!saveVassalVersion.equals(vassalVersion)) {
+          log.info("*** User explicitly cleared mismatch of Vassal version - " + saveVassalVersion + " file loaded into => " + vassalVersion); //NON-NLS
+        }
       }
     }
 
@@ -615,12 +645,6 @@ public class GameState implements CommandEncoder {
       "Loading save game " + file.getPath() + //NON-NLS
         ", created with module version " + saveModuleVersion //NON-NLS
     );
-    if (!saveModuleName.equals(moduleName)) {
-      log.info("*** User explicitly cleared mismatch of module name - " + saveModuleName + " file loaded into => " + moduleName); //NON-NLS
-    }
-    else if (!saveModuleVersion.equals(moduleVersion)) {
-      log.info("*** User explicitly cleared mismatch of module version - " + saveModuleVersion + " file loaded into => " + moduleVersion); //NON-NLS
-    }
 
     return true;
   }
@@ -869,7 +893,7 @@ public class GameState implements CommandEncoder {
             }
           }
         }
-        catch (IOException | UnsupportedFlavorException e) {
+        catch (IOException | UnsupportedFlavorException | InvalidDnDOperationException e) {
           // Do nothing -- we only failed to read anything out of the drag-and-drop
         }
       }
@@ -888,7 +912,7 @@ public class GameState implements CommandEncoder {
             }
           }
         }
-        catch (IOException | UnsupportedFlavorException e) {
+        catch (IOException | UnsupportedFlavorException | InvalidDnDOperationException e) {
           // Do nothing -- we only failed to read anything out of the drag-and-drop
         }
       }
@@ -1509,5 +1533,21 @@ public class GameState implements CommandEncoder {
       GameModule.getGameModule().getPrefs().addOption(null, savedGameDirectoryPreference);
     }
     return savedGameDirectoryPreference;
+  }
+
+  public DirectoryConfigurer getEditorImageDirectoryPreference() {
+    if (editorImageDirectoryPreference == null) {
+      editorImageDirectoryPreference = new DirectoryConfigurer("editorImageDir", null); //NON-NLS
+      GameModule.getGameModule().getPrefs().addOption(null, editorImageDirectoryPreference);
+    }
+    return editorImageDirectoryPreference;
+  }
+
+  public DirectoryConfigurer getEditorSoundDirectoryPreference() {
+    if (editorSoundDirectoryPreference == null) {
+      editorSoundDirectoryPreference = new DirectoryConfigurer("editorSoundDir", null); //NON-NLS
+      GameModule.getGameModule().getPrefs().addOption(null, editorSoundDirectoryPreference);
+    }
+    return editorSoundDirectoryPreference;
   }
 }
