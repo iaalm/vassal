@@ -28,6 +28,7 @@ import VASSAL.build.module.map.boardPicker.Board;
 import VASSAL.build.module.map.boardPicker.board.HexGrid;
 import VASSAL.build.module.map.boardPicker.board.MapGrid;
 import VASSAL.build.module.map.boardPicker.board.MapGrid.BadCoords;
+import VASSAL.build.module.map.boardPicker.board.Region;
 import VASSAL.build.module.map.boardPicker.board.RegionGrid;
 import VASSAL.build.module.map.boardPicker.board.SquareGrid;
 import VASSAL.build.module.map.boardPicker.board.ZonedGrid;
@@ -370,6 +371,17 @@ public class Zone extends AbstractConfigurable implements GridContainer, Mutable
       }
       return p;
     }
+  }
+
+  public Point getRegionLocation(String location) {
+    final MapGrid g = getGrid();
+    if (g instanceof RegionGrid) {
+      final Region r = ((RegionGrid) g).findRegion(location);
+      if (r != null) {
+        return new Point(r.getOrigin());
+      }
+    }
+    return null;
   }
 
   public String locationName(Point p) {
@@ -779,11 +791,13 @@ public class Zone extends AbstractConfigurable implements GridContainer, Mutable
 
       frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
       final JPanel labels = new JPanel();
-      labels.setLayout(new GridLayout(3, 2));
+      labels.setLayout(new GridLayout(4, 2));
       labels.add(new JLabel(Resources.getString("Editor.Zone.drag_to_create_initial_shape")));
       labels.add(new JLabel(Resources.getString("Editor.Zone.right_click_to_add_point")));
       labels.add(new JLabel(Resources.getString("Editor.Zone.left_drag_to_move_points")));
       labels.add(new JLabel(Resources.getString("Editor.Zone.del_to_remove_points")));
+      labels.add(new JLabel(Resources.getString("Editor.Zone.shift_drag_to_move_whole_shape")));
+      labels.add(new JLabel(Resources.getString("Editor.Zone.arrow_keys_adjust_position")));
       warning.setForeground(Color.red);
       warning.setVisible(false);
       labels.add(warning);

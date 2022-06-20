@@ -289,7 +289,13 @@ public class ExpressionInterpreter extends AbstractInterpreter implements Loopab
         }
         else {
           try {
-            setVar(var, Integer.parseInt(value));
+            // Convert an Integer commencing with 0, or +/- 0 to a String
+            if ((value.length() > 1 && (value.startsWith("0")) || (value.length() > 2 && value.startsWith("-0")))) {
+              setVar(var, value);
+            }
+            else {
+              setVar(var, Integer.parseInt(value));
+            }
           }
           catch (NumberFormatException ex1) {
 

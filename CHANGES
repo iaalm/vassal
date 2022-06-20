@@ -1,3 +1,36 @@
+3.6.8 - ???
+
+* 11497: Don't play sounds while fast-forwarding a log
+* 11496: Safer GKC Configurer for Fixed # From Deck
+
+3.6.7 - 3 June 2022
+
+* 11487: Removed obsolete option from startup script
+* 11465: DoActionButton claims its icon in remove-unused-images
+* 11460: Show a dialog when connection to the game server is lost
+* 11446: Tweak version number display in online window (numbers at end, grayed
+    out)
+* 11417: Fix Ctrl key with Does Not Stack trait
+* 11414: Improved version mismatch messaging
+* 11406: Don't show image scale option for panels inside Chart Windows
+* 11388: Correctly draw hex coordinates for odd-numbered columns spanning tile
+    boundaries
+* 11373: Make columns in Delayed Notes table sortable
+* 11372: Delayed Notes from subsequent saves displayed out of order
+* 11369: Leading zeros handling in Set Dynamic Property
+* 11362: Match expanded Inventory nodes by entry value, not by display text
+* 11361: Allow Calculated properties to set Game Piece Layer
+* 11356: SetupStack can match literal grid names even if Zone only reports
+    Zone name (e.g., uses $name$ as Location Format)
+* 11351: Documented that Mats w/ cargo can't go in decks
+* 11348: Polygon Editor improvements (move whole shape, tab between points)
+* 11347: Inventory should not reveal face down deck images
+* 11346: Update bundled Java to 18
+* 11344: Prevent Undo from triggering Deck Empty Hotkey
+* 11343: Ensure that the pivot point is used for rotating Cargo
+* 11330: Allow .toString() to be called properly on property names in Beanshell
+* 11329: Invisible Pieces belonging to another player can still stack together
+
 3.6.6 - 29 March 2022
 
 * 11327: Fix Action Button not working after refreshing pre-defined setups

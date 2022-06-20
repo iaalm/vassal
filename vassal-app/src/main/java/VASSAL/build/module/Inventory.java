@@ -40,6 +40,7 @@ import VASSAL.configure.TranslatingStringEnumConfigurer;
 import VASSAL.configure.VisibilityCondition;
 import VASSAL.counters.BasicPiece;
 import VASSAL.counters.BoundsTracker;
+import VASSAL.counters.Deck;
 import VASSAL.counters.Decorator;
 import VASSAL.counters.GamePiece;
 import VASSAL.counters.PieceFilter;
@@ -405,6 +406,14 @@ public class Inventory extends AbstractToolbarItem
                 final AffineTransform orig_t = g2d.getTransform();
                 g2d.setTransform(SwingUtils.descaleTransform(orig_t));
 
+                Object owner = null;
+                final Stack parent = piece.getParent();
+                if (parent instanceof Deck) {
+                  owner = piece.getProperty(Properties.OBSCURED_BY);
+                  final boolean faceDown = ((Deck) parent).isFaceDown();
+                  piece.setProperty(Properties.OBSCURED_BY, faceDown ? Deck.NO_USER : null);
+                }
+
                 piece.draw(
                   g,
                   (int)(-r.x * os_scale),
@@ -412,6 +421,10 @@ public class Inventory extends AbstractToolbarItem
                   c,
                   getCurrentZoom() * os_scale
                 );
+
+                if (parent instanceof Deck) {
+                  piece.setProperty(Properties.OBSCURED_BY, owner);
+                }
 
                 g2d.setTransform(orig_t);
               }
@@ -1041,16 +1054,22 @@ public class Inventory extends AbstractToolbarItem
     final int n = tree.getRowCount();
     for (int i = 0; i < n; ++i) {
       if (tree.isExpanded(i)) {
-        expanded.add(tree.getPathForRow(i).getLastPathComponent().toString());
+        final Object o = tree.getPathForRow(i).getLastPathComponent();
+        if (o instanceof CounterNode) {
+          expanded.add(((CounterNode) o).getEntry());
+        }
       }
     }
+
     buildTreeModel();
     tree.setModel(results);
 
     for (int i = 0; i < tree.getRowCount(); ++i) {
-      if (expanded.contains(
-            tree.getPathForRow(i).getLastPathComponent().toString())) {
-        tree.expandRow(i);
+      final Object o = tree.getPathForRow(i).getLastPathComponent();
+      if (o instanceof CounterNode) {
+        if (expanded.contains(((CounterNode) o).getEntry())) {
+          tree.expandRow(i);
+        }
       }
     }
 

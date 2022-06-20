@@ -51,6 +51,7 @@ import VASSAL.tools.io.ZipWriter;
 import VASSAL.tools.menu.MenuManager;
 import VASSAL.tools.swing.Dialogs;
 import VASSAL.tools.version.VersionUtils;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
@@ -134,6 +135,13 @@ public class GameState implements CommandEncoder {
    */
   void setLoadingInBackground(boolean b) {
     loadingInBackground = b;
+  }
+
+  /**
+   * @return true if currently fast-forwarding a log
+   */
+  public boolean isFastForwarding() {
+    return fastForwarding;
   }
 
   void setLastSaveFile(File f) {
@@ -289,7 +297,6 @@ public class GameState implements CommandEncoder {
     final String s = saveString();
     return s != null && !s.equals(lastSave);
   }
-
 
   /**
    * @return true if saveGame action is enabled (mainly to detect if logging can start)
@@ -483,7 +490,6 @@ public class GameState implements CommandEncoder {
     return result;
   }
 
-
   /**
    * Start/end a game.  Prompt to save if the game state has been
    * modified since last save.  Invoke {@link GameComponent#setup}
@@ -567,7 +573,6 @@ public class GameState implements CommandEncoder {
     return gameStarted;
   }
 
-
   /**
    * @param file to validate as a legitimate save file
    * @return true if metadata is valid (or explicitly cleared-for-crash by user) and clear to proceed
@@ -586,38 +591,31 @@ public class GameState implements CommandEncoder {
 
     final String moduleName = GameModule.getGameModule().getGameName();
     final String moduleVersion = GameModule.getGameModule().getGameVersion();
-    final String vassalVersion = VersionUtils.truncateToIncrementalVersion(Info.getVersion());
+    final String vassalVersion = VersionUtils.truncateToMinorVersion(Info.getVersion());
 
     final String saveModuleName = saveData.getModuleName();
     String saveModuleVersion = "?";
     String saveVassalVersion = "?";
-    int problemCount = 0;
+    final GameModule g = GameModule.getGameModule();
 
     // Was the Module Data that created the save stored in the save? (Vassal 3.0+)
     if (saveData.getModuleData() != null) {
       saveModuleVersion = saveData.getModuleVersion();
-      saveVassalVersion = VersionUtils.truncateToIncrementalVersion(saveData.getVassalVersion());
-      final StringBuilder message = new StringBuilder();
-      message.append(Resources.getString("GameState.load_mismatch_header",  file.getName())).append("\n\n");
+      saveVassalVersion = VersionUtils.truncateToMinorVersion(saveData.getVassalVersion());
 
+      // For a module name discrepancy, still show an Are You Sure dialog.
       if (!saveModuleName.equals(moduleName)) {
-        message.append(Resources.getString("GameState.load_module_mismatch", saveModuleName, moduleName)).append('\n');
-        problemCount++;
-      }
+        final String m = Resources.getString("GameState.load_module_mismatch", saveModuleName, moduleName);
+        g.warn("!<b>" + m);
+        log.info(m);
+        final StringBuilder message = new StringBuilder();
+        message.append(Resources.getString("GameState.load_mismatch_header",  file.getName()))
+          .append("\n\n")
+          .append(m)
+          .append("\n\n")
+          .append(Resources.getString("GameState.load_mismatch_trailer"))
+          .append('\n');
 
-      if (!saveModuleVersion.equals(moduleVersion)) {
-        message.append(Resources.getString("GameState.load_version_mismatch", saveModuleVersion, moduleVersion)).append('\n');
-        problemCount++;
-      }
-
-      if (!saveVassalVersion.equals(vassalVersion)) {
-        message.append(Resources.getString("GameState.load_vassal_mismatch", saveVassalVersion, vassalVersion)).append('\n');
-        problemCount++;
-      }
-
-      message.append('\n').append(Resources.getString("GameState.load_mismatch_trailer")).append('\n');
-
-      if (problemCount > 0) {
         if (JOptionPane.showConfirmDialog(
           null,
           message.toString(),
@@ -626,18 +624,19 @@ public class GameState implements CommandEncoder {
           JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
           return false;
         }
+      }
 
-        if (!saveModuleName.equals(moduleName)) {
-          log.info("*** User explicitly cleared mismatch of module name - " + saveModuleName + " file loaded into => " + moduleName); //NON-NLS
-        }
+      // For Module Version and Vassal Version mismatches, just report in chat.
+      if (!saveModuleVersion.equals(moduleVersion)) {
+        final String message = Resources.getString("GameState.load_version_mismatch", saveModuleVersion, moduleVersion);
+        g.warn("?<b>" + message);
+        log.info(message);
+      }
 
-        if (!saveModuleVersion.equals(moduleVersion)) {
-          log.info("*** User explicitly cleared mismatch of module version - " + saveModuleVersion + " file loaded into => " + moduleVersion); //NON-NLS
-        }
-
-        if (!saveVassalVersion.equals(vassalVersion)) {
-          log.info("*** User explicitly cleared mismatch of Vassal version - " + saveVassalVersion + " file loaded into => " + vassalVersion); //NON-NLS
-        }
+      if (!saveVassalVersion.equals(vassalVersion)) {
+        final String message = Resources.getString("GameState.load_vassal_mismatch", saveVassalVersion, vassalVersion);
+        g.warn("?<b>" + message);
+        log.info(message);
       }
     }
 
@@ -673,15 +672,15 @@ public class GameState implements CommandEncoder {
     loadGame(continuation, false);
   }
 
-    /**
-     * Read the game from a savefile.  The contents of the file is
-     * sent to {@link GameModule#decode} and translated into a
-     * {@link Command}, which is then executed.  The command read from the
-     * file should be that returned by {@link #getRestoreCommand}.
-     *
-     * @param continuation if true then do the "old-style" version of load continuation
-     * @param forceForeground if true then force load in foreground
-     */
+  /**
+   * Read the game from a savefile.  The contents of the file is
+   * sent to {@link GameModule#decode} and translated into a
+   * {@link Command}, which is then executed.  The command read from the
+   * file should be that returned by {@link #getRestoreCommand}.
+   *
+   * @param continuation if true then do the "old-style" version of load continuation
+   * @param forceForeground if true then force load in foreground
+   */
   public void loadGame(boolean continuation, boolean forceForeground) {
     final GameModule g = GameModule.getGameModule();
 
@@ -740,11 +739,11 @@ public class GameState implements CommandEncoder {
    */
   public boolean loadGame(File f, boolean continuation, boolean forceForeground) {
     try {
-      if (!f.exists()) throw new FileNotFoundException(
-        "Unable to locate " + f.getPath()); //NON-NLS
+      if (!f.exists()) throw new FileNotFoundException("Unable to locate " + f.getPath());
 
       // Check the Save game for validity
       if (!isSaveMetaDataValid(f)) {
+        GameModule.getGameModule().warn(Resources.getString("GameState.cancel_load", f.getName()));
         return false;
       }
 
@@ -802,8 +801,6 @@ public class GameState implements CommandEncoder {
 
     loadGame(false, true); // First load the old game or log, forcing it to all happen foreground
 
-    fastForwarding = false;
-
     final GameModule g = GameModule.getGameModule();
     final BasicLogger bl = g.getBasicLogger();
     if (bl.isReplaying()) {
@@ -843,6 +840,8 @@ public class GameState implements CommandEncoder {
     else {
       g.warn(Resources.getString("GameState.simple_save_append"));
     }
+
+    fastForwarding = false;
   }
 
   /**
@@ -948,7 +947,6 @@ public class GameState implements CommandEncoder {
 
     return true;
   }
-
 
   /** Closes the game. */
   public void closeGame() {
@@ -1216,6 +1214,7 @@ public class GameState implements CommandEncoder {
 
     return null;
   }
+
   public static final String BEGIN_SAVE = "begin_save";  //$NON-NLS-1$
   public static final String END_SAVE = "end_save";  //$NON-NLS-1$
 
@@ -1280,7 +1279,6 @@ public class GameState implements CommandEncoder {
     ModuleManagerUpdateHelper.sendGameUpdate(f);
   }
 
-
   public void loadGameInForeground(final File f) {
     try {
       loadGameInForeground(
@@ -1333,7 +1331,6 @@ public class GameState implements CommandEncoder {
     }
   }
 
-
   public void loadGameInBackground(final File f) {
     try {
       loadGameInBackground(
@@ -1345,7 +1342,6 @@ public class GameState implements CommandEncoder {
       ReadErrorDialog.error(e, f);
     }
   }
-
 
   public void loadGameInBackground(final String shortName, final InputStream in) {
     loadGameInBackground(shortName, in, false);
