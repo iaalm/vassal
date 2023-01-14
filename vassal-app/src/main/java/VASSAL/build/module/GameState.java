@@ -32,6 +32,7 @@ import VASSAL.command.ConditionalCommand;
 import VASSAL.command.Logger;
 import VASSAL.command.NullCommand;
 import VASSAL.configure.DirectoryConfigurer;
+import VASSAL.configure.StringArrayConfigurer;
 import VASSAL.counters.GamePiece;
 import VASSAL.i18n.Resources;
 import VASSAL.launch.ModuleManagerUpdateHelper;
@@ -83,6 +84,7 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -738,12 +740,14 @@ public class GameState implements CommandEncoder {
    * @return true if a file load was successfully started
    */
   public boolean loadGame(File f, boolean continuation, boolean forceForeground) {
+    final GameModule g = GameModule.getGameModule();
+
     try {
       if (!f.exists()) throw new FileNotFoundException("Unable to locate " + f.getPath());
 
       // Check the Save game for validity
       if (!isSaveMetaDataValid(f)) {
-        GameModule.getGameModule().warn(Resources.getString("GameState.cancel_load", f.getName()));
+        g.warn(Resources.getString("GameState.cancel_load", f.getName()));
         return false;
       }
 
@@ -759,20 +763,20 @@ public class GameState implements CommandEncoder {
           }
         }
 
-        GameModule.getGameModule().setGameFile(f.getName(), GameModule.GameFileMode.LOADED_GAME);
+        g.setGameFile(f.getName(), GameModule.GameFileMode.LOADED_GAME);
 
         //BR// New preferred style load for vlogs is close the old stuff and hard-reset to the new log state.
         if (gameStarted) {
-          GameModule.getGameModule().setGameFileMode(GameModule.GameFileMode.NEW_GAME);
+          g.setGameFileMode(GameModule.GameFileMode.NEW_GAME);
 
-          GameModule.getGameModule().setLoadOverSemaphore(true); // Stop updating Map UI etc for a bit
+          g.setLoadOverSemaphore(true); // Stop updating Map UI etc for a bit
           try {
             gameStarted = false; // Prevent setup(false) from re-asking about saving the game
             setup(false);        // Completely wipe the game state *before* we decode the saved game
             loadGameInForeground(f); // Foreground loading minimizes the bad behavior of windows during vlog load "mid game"
           }
           finally {
-            GameModule.getGameModule().setLoadOverSemaphore(false); // Resume normal UI updates
+            g.setLoadOverSemaphore(false); // Resume normal UI updates
           }
         }
         else if (forceForeground) {
@@ -788,7 +792,25 @@ public class GameState implements CommandEncoder {
       return false;
     }
 
+    updateRecentGames(f);
+
     return true;
+  }
+
+  private void updateRecentGames(File f) {
+    // get existing recent games list
+    final StringArrayConfigurer recentGamesConf = (StringArrayConfigurer) GameModule.getGameModule().getPrefs().getOption(GameModule.RECENT_GAMES);
+    final List<String> rgs = new ArrayList<>(Arrays.asList(recentGamesConf.getStringArray()));
+    final String path = f.toString();
+
+    // advance new file to the end of the list
+    rgs.remove(path);
+    rgs.add(path);
+
+    // truncate the list to the last 24 elements and reset
+    final int max = 24;
+    final int end = rgs.size();
+    recentGamesConf.setValue(rgs.subList(Math.max(0, end - max), end).toArray(new String[0]));
   }
 
   /**
@@ -952,6 +974,11 @@ public class GameState implements CommandEncoder {
   public void closeGame() {
     GameModule.getGameModule().setGameFileMode(GameModule.GameFileMode.NEW_GAME);
     setup(false);
+
+    final Logger log = GameModule.getGameModule().getLogger();
+    if (log instanceof BasicLogger) {
+      ((BasicLogger)log).setMultiPlayer(false);
+    }
   }
 
   /** Saves the game to an existing file, or prompts for a new one. */

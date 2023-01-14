@@ -76,6 +76,7 @@ _Example:_ If the Turn Counter contains a Month level that contains a Day level,
 
 *Height of Turn Tracker widget:*:: Height in pixels of the turn tracker display. This can be used to help match your turn tracker to the heights of icons you are using on your toolbar.
 
+*Allow Only Forward:*:: Setting this toggle prevents players form going backwards with the Turn Counter. This feature prevents the triggering of unintended automation. Players may still go back to correct errors, but they must use the "undo" button instead. The "undo" button will unwrap previously triggered automation instead of triggering it a second time as would occur when the Turn Counter goes backwards.
 image:images/TurnTracker.png[]
 
 ==== Module level defaults and preferences
@@ -89,7 +90,7 @@ _TurnTracker.defaultFontSize_, _TurnTracker.defaultFontBold_, and/or _TurnTracke
 
 To add a new level to your Turn Counter, open the <<Editor.adoc#top,Editor>> and navigate to your _[Turn Counter]_ component.
 Right-click on the _[Turn Counter]_ component and select _Add List_ or _Add Counter_ , depending on whether you want the level to be a list (e.g.
-"Spring", "Summer", etc) or a numeric value (e.g.
+"Spring", "Summer", etc.) or a numeric value (e.g.
 1914, 1915, etc). You can then optionally right-click on the new _[List]_ or _[Counter]_ you've just added, to add another level beneath it, and so forth.
 
 You can also add a Global Hotkey to your Turn Counter (see below).

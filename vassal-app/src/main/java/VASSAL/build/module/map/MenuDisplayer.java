@@ -35,6 +35,7 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
 import VASSAL.counters.ActionButton;
+import VASSAL.tools.NamedKeyManager;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -51,6 +52,7 @@ import VASSAL.counters.PieceFinder;
 import VASSAL.counters.Properties;
 
 public class MenuDisplayer extends MouseAdapter implements Buildable {
+  @Deprecated(since = "2022-08-08", forRemoval = true)
   public static final Font POPUP_MENU_FONT = new Font(Font.DIALOG, Font.PLAIN, 10);
 
   protected Map map;
@@ -107,10 +109,12 @@ public class MenuDisplayer extends MouseAdapter implements Buildable {
   // This both eliminates duplicate code AND makes this critical menu-building functionality able to "play well with others".
   // Menu text & behavior can now be custom-classed without needing to override the monster that is MenuDisplayer#createPopup.
   protected static JMenuItem makeMenuItem(KeyCommand keyCommand) {
-
     final JMenuItem item = new JMenuItem(keyCommand.isMenuSeparator() ? MenuSeparator.SEPARATOR_NAME : getMenuText(keyCommand));
+    if (!NamedKeyManager.isNamed(keyCommand.getKeyStroke())) { // If the KeyStroke is named, then there is no accelerator
+      item.setAccelerator(keyCommand.getKeyStroke());
+    }
+
     item.addActionListener(keyCommand);
-    item.setFont(POPUP_MENU_FONT);
     item.setEnabled(keyCommand.isEnabled());
 
     return item;
@@ -156,7 +160,6 @@ public class MenuDisplayer extends MouseAdapter implements Buildable {
         JMenuItem item = null;
         if (keyCommand instanceof KeyCommandSubMenu) {
           final JMenu subMenu = new JMenu(getMenuText(keyCommand));
-          subMenu.setFont(POPUP_MENU_FONT);
           subMenus.put((KeyCommandSubMenu) keyCommand, subMenu);
           item = subMenu;
           commands.add(item);
