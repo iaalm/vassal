@@ -30,7 +30,6 @@ import VASSAL.build.widget.PieceSlot;
 import VASSAL.command.ChangeTracker;
 import VASSAL.command.Command;
 import VASSAL.command.NullCommand;
-import VASSAL.configure.BooleanConfigurer;
 import VASSAL.configure.NamedHotKeyConfigurer;
 import VASSAL.counters.BasicPiece;
 import VASSAL.counters.BoundsTracker;
@@ -54,7 +53,6 @@ import VASSAL.counters.PieceVisitorDispatcher;
 import VASSAL.counters.Properties;
 import VASSAL.counters.PropertyExporter;
 import VASSAL.counters.Stack;
-import VASSAL.i18n.Resources;
 import VASSAL.tools.DebugControls;
 import VASSAL.tools.FormattedString;
 import VASSAL.tools.LaunchButton;
@@ -645,12 +643,6 @@ public class PieceMover extends AbstractBuildable
    */
   protected void initButton() {
     final String value = getMarkOption();
-    if (GlobalOptions.PROMPT.equals(value)) {
-      final BooleanConfigurer config = new BooleanConfigurer(
-        Map.MARK_MOVED, Resources.getString("Editor.PieceMover.mark_moved_pieces"), Boolean.TRUE);
-      GameModule.getGameModule().getPrefs().addOption(config);
-    }
-
     if (!GlobalOptions.NEVER.equals(value)) {
       if (markUnmovedButton == null) {
         final ActionListener al = e -> {
@@ -713,12 +705,8 @@ public class PieceMover extends AbstractBuildable
    * @return Our setting w/ regard to marking pieces moved.
    */
   private String getMarkOption() {
-    String value = map.getAttributeValueString(Map.MARK_MOVED);
-    if (value == null) {
-      value = GlobalOptions.getInstance()
-                           .getAttributeValueString(GlobalOptions.MARK_MOVED);
-    }
-    return value;
+    final String value = map.getAttributeValueString(Map.MARK_MOVED);
+    return (value == null) ? GlobalOptions.ALWAYS : value;
   }
 
   @Override
@@ -772,6 +760,9 @@ public class PieceMover extends AbstractBuildable
    * @return Command encapsulating anything this method did, for replay in log file or on other clients
    */
   protected Command movedPiece(GamePiece p, Point loc) {
+    // Make sure we don't end up sending I'm-empty commands from decks that were emptied by other players (e.g. online or log-step)
+    GameModule.getGameModule().getDeckManager().clearEmptyDecksList();
+
     Command c = new NullCommand();
     c = c.append(setOldLocations(p));
     if (!loc.equals(p.getPosition())) {
@@ -841,16 +832,7 @@ public class PieceMover extends AbstractBuildable
    */
   protected boolean shouldMarkMoved() {
     final String option = getMarkOption();
-    if (GlobalOptions.ALWAYS.equals(option)) {
-      return true;
-    }
-    else if (GlobalOptions.NEVER.equals(option)) {
-      return false;
-    }
-    else {
-      return Boolean.TRUE.equals(
-        GameModule.getGameModule().getPrefs().getValue(Map.MARK_MOVED));
-    }
+    return !GlobalOptions.NEVER.equals(option);
   }
 
   /**
@@ -937,6 +919,9 @@ public class PieceMover extends AbstractBuildable
       newDragBuffer.add(mm.getMatPiece());
       newDragBuffer.addAll(mm.getCargo());
     }
+
+    final GameModule gm = GameModule.getGameModule();
+    final boolean isMatSupport = gm.isMatSupport();
 
     // Non-null when a Mat being processed, or when cargo loaded on the Mat is being processed
     Mat currentMat = null;
@@ -1122,7 +1107,7 @@ public class PieceMover extends AbstractBuildable
         KeyBuffer.getBuffer().add(piece);
 
         // Support for Mats and Cargo
-        if (GameModule.getGameModule().isMatSupport()) {
+        if (isMatSupport) {
           // If this is a piece that can be placed on mats, look for an overlapping mat, and put it there.
           if (Boolean.TRUE.equals(piece.getProperty(MatCargo.IS_CARGO))) {
             final MatCargo cargo = (MatCargo)Decorator.getDecorator(piece, MatCargo.class);
@@ -1171,6 +1156,9 @@ public class PieceMover extends AbstractBuildable
     if (map.getMoveKey() != null) {
       comm = comm.append(applyKeyAfterMove(allDraggedPieces, map.getMoveKey()));
     }
+
+    // If we emptied any decks, let them send their I-am-empty key commands
+    comm = gm.getDeckManager().checkEmptyDecks(comm);
 
     // Repaint any areas of the map window changed by our move
     tracker.repaint();
