@@ -1,3 +1,19 @@
+3.6.13 - 24 February 2023
+
+* 12042: Fix bug when copying Decks and At-Start Stacks to other maps
+* 12037: Fix concurrent modification exception in Decks
+* 12016: Fix a possible crash scenario in At-Start Stacks
+* 11995: ActionButtons with reports shouldn't display them if report is empty
+* 11967: When dragging piece out of face-down deck, use unrotated shape
+* 11897: Ensure that deleted extensions don't crash the Module Manager
+* 11693: Prevent NPE when copying folders containing Mouse-over Stack Viewers
+* 11451: Don't permit drag-and-drop within PlaceMarker, Replace with Other
+    selection dialogs
+* 11173: Fixed crash in sorting a deck
+* 10877: Added a 'player joined' message when playing online
+*  9786: Text Label traits will respond to GameRefresher (unless trait has a
+    manually-change-label hotkey defined)
+
 3.6.12 - 16 February 2023
 
 * 12013: Reinstate removal of module tile cache when a module is removed from
